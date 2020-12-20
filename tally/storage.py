@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import dataclass
 
 from sqlalchemy import create_engine
 from sqlalchemy import distinct
@@ -7,53 +8,71 @@ from sqlalchemy.sql import func
 
 from tally.models import Tally, Base
 
-conn_string = "sqlite:///tally.db"
-# conn_string = "sqlite:///:memory:"
-engine = create_engine(conn_string)
-Base.metadata.create_all(engine) # here we create all tables
-Session = sessionmaker(bind=engine)
-session = Session()
 
-def add_tally(label):
-    new_tally = Tally(label=label)
+class StorageStaticMethods():
+    @staticmethod
+    def is_today(self, date: datetime.datetime):
+        now = datetime.datetime.now()
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + datetime.timedelta(days=1)
+        is_today = start <= date and date < end
+        return is_today
 
-    session.add(new_tally)
-    session.commit()
+@dataclass
+class Storage(StorageStaticMethods):
+    """Tally storage class"""
+    connection_string: str = "sqlite:///:memory:"
+    engine = None
+    session = None
 
-    return new_tally
+    def needs_session(func):
+        def wrapper(self, *args, **kwargs):
+            if self.engine is None:
+                self.engine = create_engine(self.connection_string)
+                Base.metadata.create_all(self.engine) # here we create all tables
+            if self.session is None:
+                Session = sessionmaker(bind=self.engine)
+                self.session = Session()
 
-def get_count(label=None):
-    now = datetime.datetime.now()
-    start = now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.timezone.utc)
-    end = (start + datetime.timedelta(days=1)).astimezone(datetime.timezone.utc)
+            return func(self, *args, **kwargs)
+        return wrapper
 
-    count = session.query(Tally).filter(
-        Tally.label == label,
-        Tally.time_created >= start,
-        Tally.time_created < end,
-    ).count()
-    return count
+    @needs_session
+    def add_tally(self, label):
+        new_tally = Tally(label=label)
 
-def get_counts_today():
-    now = datetime.datetime.now()
-    start = now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.timezone.utc)
-    end = (start + datetime.timedelta(days=1)).astimezone(datetime.timezone.utc)
+        self.session.add(new_tally)
+        self.session.commit()
 
-    # counts = session.query(Tally).filter(
-    #     Tally.time_created >= start,
-    #     Tally.time_created < end,
-    # )
-    # .group_by(Tally.label)
-    # .count()
+        return new_tally
 
-    counts = session.query(func.count(distinct(Tally.label))).all()
+    @needs_session
+    def get_count(self, label=None):
+        now = datetime.datetime.now()
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.timezone.utc)
+        end = (start + datetime.timedelta(days=1)).astimezone(datetime.timezone.utc)
 
+        count = self.session.query(Tally).filter(
+            Tally.label == label,
+            Tally.time_created >= start,
+            Tally.time_created < end,
+        ).count()
+        return count
 
-    return counts
+    @needs_session
+    def get_counts_today(self):
+        now = datetime.datetime.now()
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.timezone.utc)
+        end = (start + datetime.timedelta(days=1)).astimezone(datetime.timezone.utc)
 
-def is_today(date: datetime.datetime):
-    now = datetime.datetime.now()
-    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        counts = self.session.query(Tally.label, func.count(Tally.label)).group_by(Tally.label).filter(
+            Tally.time_created >= start,
+            Tally.time_created < end,
+        ).all()
 
-    end = start + datetime.timedelta(days=1)
-    return start <= date and date < end
+        return counts
+
+    @needs_session
+    def get_counts_all(self):
+        counts = self.session.query(Tally.label, func.count(Tally.label)).group_by(Tally.label).all()
+        return counts
