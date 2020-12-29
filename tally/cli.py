@@ -12,9 +12,6 @@ storage = Storage("sqlite:///tally.db")
 # TODO: change sleep to something like sleep_until
 # see https://stackoverflow.com/questions/2031111/in-python-how-can-i-put-a-thread-to-sleep-until-a-specific-time
 
-# TODO: add goal per activity
-# TODO: cycle through default button based on lowest tally relative to goal
-
 INTERVAL_MINUTES = 15
 
 INTERVAL_SECONDS = INTERVAL_MINUTES * 60
@@ -86,14 +83,18 @@ def get_user_activity(activities, status="", default=None):
 
         return selection
 
-def tell_finished():
-    message = "You met your goals for the day!"
-    click.echo(message)
+def notify(title="Tally", subtitle="", message=""):
     applescript = f"""
-    set message to "{message}"
-    display dialog message buttons {"Great!"}"
+    display notification "{message}" with title "{title}" subtitle "{subtitle}"
     """
     run_applescript(applescript)
+
+def tell_finished():
+    title = "Tally"
+    subtitle = "Great jobs!"
+    message = "You met your goals for the day!"
+    click.echo(message)
+    notify(title, subtitle, message)
 
 def sleep_loop():
     if ALLIGN_TO_HOUR:
