@@ -10,11 +10,12 @@ setup(
     ),
     install_requires=[
         'click',
+        'fire',
         'sqlalchemy',
         'questionary',
     ],
     entry_points = {
-        'console_scripts': ['tally=tally.cli:tally'],
+        'console_scripts': ['tally=tally.cli_fire:main'],
     },
     zip_safe=False,
     # package_data={
