@@ -1,4 +1,5 @@
 import subprocess
+from dataclasses import dataclass
 from time import sleep
 from datetime import datetime
 
@@ -24,14 +25,38 @@ activities = [
     {
         "label": "Body Squats",
         "goal": 10,
+        "value": 10,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Plank",
+        "goal": 10,
+        "value": 30,
+        "unit": "seconds",
     },
     {
         "label": "Pushups",
         "goal": 10,
+        "value": 10,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Crunches",
+        "goal": 10,
+        "value": 10,
+        "unit": "repetitions",
     },
     {
         "label": "Pullups",
         "goal": 10,
+        "value": 5,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Superman",
+        "goal": 10,
+        "value": 15,
+        "unit": "seconds",
     },
 ]
 
@@ -109,8 +134,10 @@ def echo(echo_string):
     print(echo_string)
 
 
+@dataclass
 class Tally(object):
     """Keep tally for arbitrary strings"""
+    on_hour: bool = True
 
     def add(self, label):
         echo(storage.add_tally(label))
@@ -124,7 +151,7 @@ class Tally(object):
             else:
                 echo(storage.get_count(label))
 
-    def run(self, ):
+    def run(self):
         loop = True
         last_prompted = False
         while loop:
@@ -133,7 +160,7 @@ class Tally(object):
             echo(f"{current_minute}:{current_second}")
             echo(f"INTERVAL_SECONDS: {INTERVAL_SECONDS}")
 
-            if ALLIGN_TO_HOUR:
+            if self.on_hour:
                 if current_minute % INTERVAL_MINUTES != 0 or current_minute == last_prompted:
                     sleep_loop()
 
