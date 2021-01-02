@@ -8,6 +8,7 @@ flask = "*"
 click = "*"
 sqlalchemy = "*"
 questionary = "*"
+fire = "*"
 
 [dev-packages]
 
