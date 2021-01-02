@@ -13,12 +13,6 @@ storage = Storage("sqlite:///tally.db")
 # TODO: change sleep to something like sleep_until
 # see https://stackoverflow.com/questions/2031111/in-python-how-can-i-put-a-thread-to-sleep-until-a-specific-time
 
-INTERVAL_MINUTES = 15
-
-INTERVAL_SECONDS = INTERVAL_MINUTES * 60
-# INTERVAL_SECONDS = 1
-
-ALLIGN_TO_HOUR = True
 SELECT_DIALOG = True
 
 activities = [
@@ -121,15 +115,6 @@ def tell_finished():
     echo(message)
     notify(title, subtitle, message)
 
-def sleep_loop():
-    if ALLIGN_TO_HOUR:
-        # sleep(5)
-        sleep_seconds = INTERVAL_SECONDS - ((datetime.now().minute % INTERVAL_MINUTES) * 60) - datetime.now().second
-        echo(f"sleep_seconds: {sleep_seconds}")
-        sleep(sleep_seconds)
-    else:
-        sleep(INTERVAL_SECONDS)
-
 def echo(echo_string):
     print(echo_string)
 
@@ -138,6 +123,7 @@ def echo(echo_string):
 class Tally(object):
     """Keep tally for arbitrary strings"""
     on_hour: bool = True
+    interval: int = 15
 
     def add(self, label):
         echo(storage.add_tally(label))
@@ -151,18 +137,32 @@ class Tally(object):
             else:
                 echo(storage.get_count(label))
 
+
+    def interval_seconds(self):
+        return self.interval * 60
+
+
+    def sleep_loop(self):
+        if self.on_hour:
+            sleep_seconds = self.interval_seconds() - ((datetime.now().minute % self.interval) * 60) - datetime.now().second
+            echo(f"Sleeping for {sleep_seconds} seconds")
+            sleep(sleep_seconds)
+        else:
+            sleep(self.interval_seconds())
+
+
     def run(self):
         loop = True
         last_prompted = False
         while loop:
             current_minute = datetime.now().minute
             current_second = datetime.now().second
-            echo(f"{current_minute}:{current_second}")
-            echo(f"INTERVAL_SECONDS: {INTERVAL_SECONDS}")
+            # echo(f"{current_minute}:{current_second}")
+            # echo(f"INTERVAL_SECONDS: {self.interval_seconds()}")
 
             if self.on_hour:
-                if current_minute % INTERVAL_MINUTES != 0 or current_minute == last_prompted:
-                    sleep_loop()
+                if current_minute % self.interval != 0 or current_minute == last_prompted:
+                    self.sleep_loop()
 
             status = ""
             # status += "Today, you have done:"
@@ -203,7 +203,7 @@ class Tally(object):
                 break
 
 
-            sleep_loop()
+            self.sleep_loop()
             # selection = click.prompt("What did you do this time?", type=str)
 
 
