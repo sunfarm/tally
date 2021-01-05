@@ -1,5 +1,5 @@
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from time import sleep
 from datetime import datetime
 
@@ -7,9 +7,6 @@ import fire
 import questionary
 
 from tally.storage import Storage
-
-storage = Storage("sqlite:///tally.db")
-# storage = Storage()
 
 # TODO: change sleep to something like sleep_until
 # see https://stackoverflow.com/questions/2031111/in-python-how-can-i-put-a-thread-to-sleep-until-a-specific-time
@@ -80,19 +77,28 @@ class Tally(object):
     """Keep tally for arbitrary strings"""
     on_hour: bool = True
     interval: int = 15
-    use_select_dialog = True
+    use_select_dialog: bool = True
+    database_name: str = "tally.db"
+    storage: Storage = field(init=False)
+
+    def __post_init__(self):
+        if self.database_name:
+            self.storage = Storage(f"sqlite:///{self.database_name}")
+        else:
+            self.storage = Storage()
+
 
     def add(self, label):
-        echo(storage.add_tally(label))
+        echo(self.storage.add_tally(label))
 
     def count(self, label=None, all=False):
         if all:
-            echo(storage.get_counts_all())
+            echo(self.storage.get_counts_all())
         else:
             if label is None:
-                echo(storage.get_counts_today())
+                echo(self.storage.get_counts_today())
             else:
-                echo(storage.get_count(label))
+                echo(self.storage.get_count(label))
 
 
     def interval_seconds(self):
@@ -125,7 +131,7 @@ class Tally(object):
             # status += "Today, you have done:"
             default_activity = activities[0]
             for activity in activities:
-                activity["count"] = storage.get_count(activity["label"])
+                activity["count"] = self.storage.get_count(activity["label"])
                 if activity["count"] < default_activity["count"]:
                     default_activity = activity
                 status += f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
@@ -139,7 +145,7 @@ class Tally(object):
             if selections:
                 echo(selections)
                 for selection in selections:
-                    storage.add_tally(selection)
+                    self.storage.add_tally(selection)
                 last_prompted = current_minute
             else:
                 echo("Cancelled automatically")
@@ -153,7 +159,7 @@ class Tally(object):
 
             loop = False
             for activity in activities:
-                activity["count"] = storage.get_count(activity["label"])
+                activity["count"] = self.storage.get_count(activity["label"])
                 if activity["count"] < activity["goal"]:
                     loop = True
             if not loop:
