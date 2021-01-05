@@ -14,8 +14,6 @@ storage = Storage("sqlite:///tally.db")
 # TODO: change sleep to something like sleep_until
 # see https://stackoverflow.com/questions/2031111/in-python-how-can-i-put-a-thread-to-sleep-until-a-specific-time
 
-SELECT_DIALOG = True
-
 activities = [
     {
         "label": "Body Squats",
@@ -58,50 +56,7 @@ activities = [
 def run_applescript(applescript):
     return str(subprocess.check_output(f"osascript -e '{applescript}'", shell=True))
 
-def get_user_activity(activities, status="", default=None):
-    # messagebox.showinfo("Title", "message")
-    # activities_str = '"' + '", "'.join(activities + ["Nothing"]) + '"'
-    activities_str = '"' + '", "'.join(activities) + '"'
-    # echo(activities_str)
 
-    prompt = "What did you do this time?"
-
-    if default is None:
-        default = activities[0]
-
-    if SELECT_DIALOG:
-        applescript = f"""
-        set choices to {{{activities_str}}}
-        set choice to choose from list choices with prompt "{status}{prompt}" default items {{"{default}"}} with multiple selections allowed
-        choice
-        """
-        echo(f"osascript -e '{applescript}'")
-        selections = subprocess.check_output(f"osascript -e '{applescript}'", shell=True).decode().strip()
-
-        echo(selections)
-
-        if selections == "false":
-            return False
-
-        return selections.split(", ")
-
-    else:
-        applescript = f"""
-        display dialog "{status}{prompt}" ¬
-        with title "Tally" ¬
-        with icon stop ¬
-        giving up after {INTERVAL_SECONDS - 60} ¬
-        buttons {{{activities_str}}}
-        """
-        # selection = str(subprocess.check_output(f"osascript -e '{applescript}'", shell=True))
-        selection = run_applescript(applescript)
-        if "gave up:true" in selection:
-            return False
-
-        selection = selection.split(":")[1]
-        selection = selection.split(",")[0]
-
-        return selection
 
 def notify(title="Tally", subtitle="", message=""):
     applescript = f"""
@@ -125,6 +80,7 @@ class Tally(object):
     """Keep tally for arbitrary strings"""
     on_hour: bool = True
     interval: int = 15
+    use_select_dialog = True
 
     def add(self, label):
         echo(storage.add_tally(label))
@@ -178,7 +134,7 @@ class Tally(object):
             echo(status)
             echo(f'Do next: {default_activity["label"]}')
             activities_list = (a["label"] for a in activities)
-            selections = get_user_activity(activities_list, status=status, default=default_activity["label"])
+            selections = self.get_user_activity(activities_list, status=status, default=default_activity["label"])
 
             if selections:
                 echo(selections)
@@ -208,6 +164,51 @@ class Tally(object):
             self.sleep_loop()
             # selection = click.prompt("What did you do this time?", type=str)
 
+
+    def get_user_activity(self, activities, status="", default=None):
+        # messagebox.showinfo("Title", "message")
+        # activities_str = '"' + '", "'.join(activities + ["Nothing"]) + '"'
+        activities_str = '"' + '", "'.join(activities) + '"'
+        # echo(activities_str)
+
+        prompt = "What did you do this time?"
+
+        if default is None:
+            default = activities[0]
+
+        if self.use_select_dialog:
+            applescript = f"""
+            set choices to {{{activities_str}}}
+            set choice to choose from list choices with prompt "{status}{prompt}" default items {{"{default}"}} with multiple selections allowed
+            choice
+            """
+            echo(f"osascript -e '{applescript}'")
+            selections = subprocess.check_output(f"osascript -e '{applescript}'", shell=True).decode().strip()
+
+            echo(selections)
+
+            if selections == "false":
+                return False
+
+            return selections.split(", ")
+
+        else:
+            applescript = f"""
+            display dialog "{status}{prompt}" ¬
+            with title "Tally" ¬
+            with icon stop ¬
+            giving up after {INTERVAL_SECONDS - 60} ¬
+            buttons {{{activities_str}}}
+            """
+            # selection = str(subprocess.check_output(f"osascript -e '{applescript}'", shell=True))
+            selection = run_applescript(applescript)
+            if "gave up:true" in selection:
+                return False
+
+            selection = selection.split(":")[1]
+            selection = selection.split(",")[0]
+
+            return selection
 
 def main():
     fire.Fire(Tally)
