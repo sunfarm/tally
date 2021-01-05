@@ -24,14 +24,38 @@ activities = [
     {
         "label": "Body Squats",
         "goal": 10,
+        "value": 10,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Plank",
+        "goal": 10,
+        "value": 30,
+        "unit": "seconds",
     },
     {
         "label": "Pushups",
         "goal": 10,
+        "value": 10,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Crunches",
+        "goal": 10,
+        "value": 10,
+        "unit": "repetitions",
     },
     {
         "label": "Pullups",
         "goal": 10,
+        "value": 5,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Superman",
+        "goal": 10,
+        "value": 15,
+        "unit": "seconds",
     },
 ]
 

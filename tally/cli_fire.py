@@ -9,6 +9,7 @@ import questionary
 from tally.storage import Storage
 
 storage = Storage("sqlite:///tally.db")
+# storage = Storage()
 
 # TODO: change sleep to something like sleep_until
 # see https://stackoverflow.com/questions/2031111/in-python-how-can-i-put-a-thread-to-sleep-until-a-specific-time
@@ -69,20 +70,20 @@ def get_user_activity(activities, status="", default=None):
         default = activities[0]
 
     if SELECT_DIALOG:
-
         applescript = f"""
         set choices to {{{activities_str}}}
-        set choice to choose from list choices with prompt "{status}{prompt}" default items {{"{default}"}}
+        set choice to choose from list choices with prompt "{status}{prompt}" default items {{"{default}"}} with multiple selections allowed
         choice
         """
-        selection = subprocess.check_output(f"osascript -e '{applescript}'", shell=True).decode().strip()
+        echo(f"osascript -e '{applescript}'")
+        selections = subprocess.check_output(f"osascript -e '{applescript}'", shell=True).decode().strip()
 
-        echo(selection)
+        echo(selections)
 
-        if selection == "false":
+        if selections == "false":
             return False
 
-        return selection
+        return selections.split(", ")
 
     else:
         applescript = f"""
@@ -177,11 +178,12 @@ class Tally(object):
             echo(status)
             echo(f'Do next: {default_activity["label"]}')
             activities_list = (a["label"] for a in activities)
-            selection = get_user_activity(activities_list, status=status, default=default_activity["label"])
+            selections = get_user_activity(activities_list, status=status, default=default_activity["label"])
 
-            if selection:
-                echo(selection)
-                storage.add_tally(selection)
+            if selections:
+                echo(selections)
+                for selection in selections:
+                    storage.add_tally(selection)
                 last_prompted = current_minute
             else:
                 echo("Cancelled automatically")
