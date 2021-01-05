@@ -136,10 +136,12 @@ class Tally(object):
             status = ""
             # status += "Today, you have done:"
             default_activity = activities[0]
-            for activity in activities:
+            default_activities = activities[:3]
+            for i, activity in enumerate(activities):
                 activity["count"] = self.storage.get_count(activity["label"])
                 if activity["count"] < default_activity["count"]:
                     default_activity = activity
+                    default_activities = activities[i:3]
                 status += (
                     f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
                 )
@@ -149,7 +151,7 @@ class Tally(object):
             echo(f'Do next: {default_activity["label"]}')
             activities_list = (a["label"] for a in activities)
             selections = self.get_user_activity(
-                activities_list, status=status, default=default_activity["label"]
+                activities_list, status, default_activities
             )
 
             if selections:
@@ -178,7 +180,7 @@ class Tally(object):
             self.sleep_loop()
             # selection = click.prompt("What did you do this time?", type=str)
 
-    def get_user_activity(self, activities, status="", default=None):
+    def get_user_activity(self, activities, status="", defaults=None):
         # messagebox.showinfo("Title", "message")
         # activities_str = '"' + '", "'.join(activities + ["Nothing"]) + '"'
         activities_str = '"' + '", "'.join(activities) + '"'
@@ -186,13 +188,16 @@ class Tally(object):
 
         prompt = "What did you do this time?"
 
-        if default is None:
-            default = activities[0]
+        if defaults is None:
+            defaults = [activities[0]]
+
+        default_items = '", "'.join(d["label"] for d in defaults)
+        default_items = f'"{default_items}"'
 
         if self.use_select_dialog:
             applescript = f"""
             set choices to {{{activities_str}}}
-            set choice to choose from list choices with prompt "{status}{prompt}" default items {{"{default}"}} with multiple selections allowed
+            set choice to choose from list choices with prompt "{status}{prompt}" default items {{{default_items}}} with multiple selections allowed
             choice
             """
             echo(f"osascript -e '{applescript}'")
