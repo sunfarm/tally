@@ -21,8 +21,17 @@ class Tally(Base):
     # time_created: Column(DateTime(timezone=True), server_default=func.now())
     __tablename__ = "tally"
     id = Column(Integer, primary_key=True)
+    # activity_id = Column(Integer, ForeignKey("activity.id"), nullable=False)
     label = Column(String, nullable=False)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
+
+
+# @dataclass
+# class Activity(Base):
+#     __tablename__ = "activity"
+#     id = Column(Integer, primary_key=True)
+#     label = Column(String, nullable=False)
+#     time_created = Column(DateTime(timezone=True), server_default=func.now())
 
 
 
