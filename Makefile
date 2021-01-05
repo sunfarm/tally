@@ -8,3 +8,6 @@ run:
 
 try:
 	pipenv run python tally/cli.py "Body Squats"
+
+format:
+	pipenv run black .

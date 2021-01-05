@@ -8,6 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+
 # from sqlalchemy.orm import registry
 
 # mapper_registry = registry()
@@ -32,6 +33,3 @@ class Tally(Base):
 #     id = Column(Integer, primary_key=True)
 #     label = Column(String, nullable=False)
 #     time_created = Column(DateTime(timezone=True), server_default=func.now())
-
-
-

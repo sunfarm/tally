@@ -59,8 +59,10 @@ activities = [
     },
 ]
 
+
 def run_applescript(applescript):
     return str(subprocess.check_output(f"osascript -e '{applescript}'", shell=True))
+
 
 def get_user_activity(activities, status="", default=None):
     # messagebox.showinfo("Title", "message")
@@ -80,7 +82,11 @@ def get_user_activity(activities, status="", default=None):
         set choice to choose from list choices with prompt "{status}{prompt}" default items {{"{default}"}}
         choice
         """
-        selection = subprocess.check_output(f"osascript -e '{applescript}'", shell=True).decode().strip()
+        selection = (
+            subprocess.check_output(f"osascript -e '{applescript}'", shell=True)
+            .decode()
+            .strip()
+        )
 
         click.echo(selection)
 
@@ -107,11 +113,13 @@ def get_user_activity(activities, status="", default=None):
 
         return selection
 
+
 def notify(title="Tally", subtitle="", message=""):
     applescript = f"""
     display notification "{message}" with title "{title}" subtitle "{subtitle}"
     """
     run_applescript(applescript)
+
 
 def tell_finished():
     title = "Tally"
@@ -120,14 +128,20 @@ def tell_finished():
     click.echo(message)
     notify(title, subtitle, message)
 
+
 def sleep_loop():
     if ALLIGN_TO_HOUR:
         # sleep(5)
-        sleep_seconds = INTERVAL_SECONDS - ((datetime.now().minute % INTERVAL_MINUTES) * 60) - datetime.now().second
+        sleep_seconds = (
+            INTERVAL_SECONDS
+            - ((datetime.now().minute % INTERVAL_MINUTES) * 60)
+            - datetime.now().second
+        )
         click.echo(f"sleep_seconds: {sleep_seconds}")
         sleep(sleep_seconds)
     else:
         sleep(INTERVAL_SECONDS)
+
 
 @click.group()
 @click.option("-d", "--decrement", is_flag=True)
@@ -141,6 +155,7 @@ def tally(decrement, count):
 def add(label):
     click.echo(storage.add_tally(label))
 
+
 @click.command()
 @click.argument("label", required=False)
 @click.option("-a", "--all", is_flag=True)
@@ -153,6 +168,7 @@ def count(label=None, all=False):
         else:
             click.echo(storage.get_count(label))
 
+
 @click.command()
 def run():
     loop = True
@@ -164,7 +180,10 @@ def run():
         click.echo(f"INTERVAL_SECONDS: {INTERVAL_SECONDS}")
 
         if ALLIGN_TO_HOUR:
-            if current_minute % INTERVAL_MINUTES != 0 or current_minute == last_prompted:
+            if (
+                current_minute % INTERVAL_MINUTES != 0
+                or current_minute == last_prompted
+            ):
                 sleep_loop()
 
         status = ""
@@ -180,7 +199,9 @@ def run():
         click.echo(status)
         click.echo(f'Do next: {default_activity["label"]}')
         activities_list = (a["label"] for a in activities)
-        selection = get_user_activity(activities_list, status=status, default=default_activity["label"])
+        selection = get_user_activity(
+            activities_list, status=status, default=default_activity["label"]
+        )
 
         if selection:
             click.echo(selection)
@@ -188,7 +209,6 @@ def run():
             last_prompted = current_minute
         else:
             click.echo("Cancelled automatically")
-
 
         # selection = questionary.select(
         #     "What did you do this time?",
@@ -205,13 +225,13 @@ def run():
             tell_finished()
             break
 
-
         sleep_loop()
         # selection = click.prompt("What did you do this time?", type=str)
+
 
 tally.add_command(add)
 tally.add_command(count)
 tally.add_command(run)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tally()

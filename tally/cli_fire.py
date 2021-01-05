@@ -50,9 +50,9 @@ activities = [
     },
 ]
 
+
 def run_applescript(applescript):
     return str(subprocess.check_output(f"osascript -e '{applescript}'", shell=True))
-
 
 
 def notify(title="Tally", subtitle="", message=""):
@@ -61,12 +61,14 @@ def notify(title="Tally", subtitle="", message=""):
     """
     run_applescript(applescript)
 
+
 def tell_finished():
     title = "Tally"
     subtitle = "Great jobs!"
     message = "You met your goals for the day!"
     echo(message)
     notify(title, subtitle, message)
+
 
 def echo(echo_string):
     print(echo_string)
@@ -75,6 +77,7 @@ def echo(echo_string):
 @dataclass
 class Tally(object):
     """Keep tally for arbitrary strings"""
+
     on_hour: bool = True
     interval: int = 15
     use_select_dialog: bool = True
@@ -86,7 +89,6 @@ class Tally(object):
             self.storage = Storage(f"sqlite:///{self.database_name}")
         else:
             self.storage = Storage()
-
 
     def add(self, label):
         echo(self.storage.add_tally(label))
@@ -100,19 +102,20 @@ class Tally(object):
             else:
                 echo(self.storage.get_count(label))
 
-
     def interval_seconds(self):
         return self.interval * 60
 
-
     def sleep_loop(self):
         if self.on_hour:
-            sleep_seconds = self.interval_seconds() - ((datetime.now().minute % self.interval) * 60) - datetime.now().second
+            sleep_seconds = (
+                self.interval_seconds()
+                - ((datetime.now().minute % self.interval) * 60)
+                - datetime.now().second
+            )
             echo(f"Sleeping for {sleep_seconds} seconds")
             sleep(sleep_seconds)
         else:
             sleep(self.interval_seconds())
-
 
     def run(self):
         loop = True
@@ -124,7 +127,10 @@ class Tally(object):
             # echo(f"INTERVAL_SECONDS: {self.interval_seconds()}")
 
             if self.on_hour:
-                if current_minute % self.interval != 0 or current_minute == last_prompted:
+                if (
+                    current_minute % self.interval != 0
+                    or current_minute == last_prompted
+                ):
                     self.sleep_loop()
 
             status = ""
@@ -134,13 +140,17 @@ class Tally(object):
                 activity["count"] = self.storage.get_count(activity["label"])
                 if activity["count"] < default_activity["count"]:
                     default_activity = activity
-                status += f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
+                status += (
+                    f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
+                )
             # status += "\n\n"
 
             echo(status)
             echo(f'Do next: {default_activity["label"]}')
             activities_list = (a["label"] for a in activities)
-            selections = self.get_user_activity(activities_list, status=status, default=default_activity["label"])
+            selections = self.get_user_activity(
+                activities_list, status=status, default=default_activity["label"]
+            )
 
             if selections:
                 echo(selections)
@@ -149,7 +159,6 @@ class Tally(object):
                 last_prompted = current_minute
             else:
                 echo("Cancelled automatically")
-
 
             # selection = questionary.select(
             #     "What did you do this time?",
@@ -166,10 +175,8 @@ class Tally(object):
                 tell_finished()
                 break
 
-
             self.sleep_loop()
             # selection = click.prompt("What did you do this time?", type=str)
-
 
     def get_user_activity(self, activities, status="", default=None):
         # messagebox.showinfo("Title", "message")
@@ -189,7 +196,11 @@ class Tally(object):
             choice
             """
             echo(f"osascript -e '{applescript}'")
-            selections = subprocess.check_output(f"osascript -e '{applescript}'", shell=True).decode().strip()
+            selections = (
+                subprocess.check_output(f"osascript -e '{applescript}'", shell=True)
+                .decode()
+                .strip()
+            )
 
             echo(selections)
 
@@ -216,8 +227,10 @@ class Tally(object):
 
             return selection
 
+
 def main():
     fire.Fire(Tally)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
