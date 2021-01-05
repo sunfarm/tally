@@ -1,6 +1,8 @@
+list:
+	@echo TODO
 
-.PHONY: build
-build:
+.PHONY: build-dev
+build-dev:
 	pipx uninstall tally && pipx install . -e
 
 run:
