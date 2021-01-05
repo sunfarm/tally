@@ -25,6 +25,12 @@ activities = [
         "unit": "seconds",
     },
     {
+        "label": "Superman",
+        "goal": 10,
+        "value": 15,
+        "unit": "seconds",
+    },
+    {
         "label": "Pushups",
         "goal": 10,
         "value": 10,
@@ -41,12 +47,6 @@ activities = [
         "goal": 10,
         "value": 5,
         "unit": "repetitions",
-    },
-    {
-        "label": "Superman",
-        "goal": 10,
-        "value": 15,
-        "unit": "seconds",
     },
 ]
 
