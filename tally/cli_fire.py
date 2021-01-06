@@ -82,6 +82,7 @@ class Tally(object):
     interval: int = 15
     use_select_dialog: bool = True
     database_name: str = "tally.db"
+    group_size: int = 3
     storage: Storage = field(init=False)
 
     def __post_init__(self):
@@ -137,12 +138,12 @@ class Tally(object):
             status = ""
             # status += "Today, you have done:"
             default_activity = activities[0]
-            default_activities = activities[:3]
+            default_activities = activities[:self.group_size]
             for i, activity in enumerate(activities):
                 activity["count"] = self.storage.get_count(activity["label"])
                 if activity["count"] < default_activity["count"]:
                     default_activity = activity
-                    default_activities = activities[i:i + 3]
+                    default_activities = [activities[j % len(activities)] for j in range(i, i + self.group_size)]
                 status += (
                     f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
                 )
