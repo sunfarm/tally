@@ -120,13 +120,14 @@ class Tally(object):
     def run(self):
         loop = True
         last_prompted = False
+        just_launched = True
         while loop:
             current_minute = datetime.now().minute
             current_second = datetime.now().second
             # echo(f"{current_minute}:{current_second}")
             # echo(f"INTERVAL_SECONDS: {self.interval_seconds()}")
 
-            if self.on_hour:
+            if self.on_hour and not just_launched:
                 if (
                     current_minute % self.interval != 0
                     or current_minute == last_prompted
@@ -141,7 +142,7 @@ class Tally(object):
                 activity["count"] = self.storage.get_count(activity["label"])
                 if activity["count"] < default_activity["count"]:
                     default_activity = activity
-                    default_activities = activities[i:3]
+                    default_activities = activities[i:i + 3]
                 status += (
                     f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
                 )
