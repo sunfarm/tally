@@ -1,5 +1,8 @@
 list:
-	@echo TODO
+	@echo Available targets:
+	@echo
+	@grep "^[-a-z]*:" Makefile | cut -f1 -d ':'
+	@echo
 
 .PHONY: build-dev
 build-dev:
