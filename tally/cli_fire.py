@@ -20,13 +20,13 @@ activities = [
     },
     {
         "label": "Plank",
-        "goal": 10,
+        "goal": 5,
         "value": 30,
         "unit": "seconds",
     },
     {
         "label": "Superman",
-        "goal": 10,
+        "goal": 5,
         "value": 15,
         "unit": "seconds",
     },
@@ -38,7 +38,7 @@ activities = [
     },
     {
         "label": "Crunches",
-        "goal": 10,
+        "goal": 5,
         "value": 10,
         "unit": "repetitions",
     },
@@ -144,16 +144,16 @@ class Tally(object):
                 if activity["count"] < default_activity["count"]:
                     default_activity = activity
                     default_activities = [activities[j % len(activities)] for j in range(i, i + self.group_size)]
-                status += (
-                    f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
-                )
+                # status += (
+                #     f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
+                # )
             # status += "\n\n"
 
-            echo(status)
+            # echo(status)
             echo(f'Do next: {default_activity["label"]}')
-            activities_list = (a["label"] for a in activities)
+            # activities_list = (a["label"] for a in activities)
             selections = self.get_user_activity(
-                activities_list, status, default_activities
+                activities, status, default_activities
             )
 
             if selections:
@@ -182,39 +182,68 @@ class Tally(object):
             self.sleep_loop()
             # selection = click.prompt("What did you do this time?", type=str)
 
+
+    def get_display_activity(self, activity):
+        return f"({activity['count']}/{activity['goal']}) {activity['label']}"
+
+
+    def get_activity_from_display(self, display_activity):
+        return display_activity.split(") ")[1]
+
+
+    def get_display_activities(self, activities):
+        return '"' + '", "'.join([self.get_display_activity(a) for a in activities]) + '"'
+
+
+    def no_selections(self, selections):
+        return selections == "false"
+
+
+    def parse_selections(self, selections):
+        result = [self.get_activity_from_display(s) for s in selections.split(", ")]
+        return result
+
+
+    def select_dialog(self, activities_str, status, prompt, default_items):
+        applescript = f"""
+        set choices to {{{activities_str}}}
+        set choice to choose from list choices with prompt "{status}{prompt}" default items {{{default_items}}} with multiple selections allowed
+        choice
+        """
+        echo(f"osascript -e '{applescript}'")
+        selections = (
+            subprocess.check_output(f"osascript -e '{applescript}'", shell=True)
+            .decode()
+            .strip()
+        )
+        return selections
+
+
     def get_user_activity(self, activities, status="", defaults=None):
         # messagebox.showinfo("Title", "message")
         # activities_str = '"' + '", "'.join(activities + ["Nothing"]) + '"'
-        activities_str = '"' + '", "'.join(activities) + '"'
-        # echo(activities_str)
+
+        activities_str = self.get_display_activities(activities)
 
         prompt = "What did you do this time?"
 
         if defaults is None:
             defaults = [activities[0]]
 
-        default_items = '", "'.join(d["label"] for d in defaults)
-        default_items = f'"{default_items}"'
+        default_items = self.get_display_activities(defaults)
+        # default_items = '", "'.join(d["label"] for d in defaults)
+        # default_items = f'"{default_items}"'
 
         if self.use_select_dialog:
-            applescript = f"""
-            set choices to {{{activities_str}}}
-            set choice to choose from list choices with prompt "{status}{prompt}" default items {{{default_items}}} with multiple selections allowed
-            choice
-            """
-            echo(f"osascript -e '{applescript}'")
-            selections = (
-                subprocess.check_output(f"osascript -e '{applescript}'", shell=True)
-                .decode()
-                .strip()
-            )
+            selections = self.select_dialog(activities_str, status, prompt, default_items)
 
             echo(selections)
 
-            if selections == "false":
+            if self.no_selections(selections):
                 return False
 
-            return selections.split(", ")
+            result = self.parse_selections(selections)
+            return result
 
         else:
             applescript = f"""
