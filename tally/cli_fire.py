@@ -207,7 +207,9 @@ class Tally(object):
     def select_dialog(self, activities_str, status, prompt, default_items):
         applescript = f"""
         set choices to {{{activities_str}}}
-        set choice to choose from list choices with prompt "{status}{prompt}" default items {{{default_items}}} with multiple selections allowed
+        set choice to choose from list choices \
+        with prompt "{status}{prompt}" default items {{{default_items}}} \
+        with multiple selections allowed
         choice
         """
         echo(f"osascript -e '{applescript}'")
@@ -220,25 +222,17 @@ class Tally(object):
 
 
     def get_user_activity(self, activities, status="", defaults=None):
-        # messagebox.showinfo("Title", "message")
-        # activities_str = '"' + '", "'.join(activities + ["Nothing"]) + '"'
-
         activities_str = self.get_display_activities(activities)
-
         prompt = "What did you do this time?"
 
         if defaults is None:
             defaults = [activities[0]]
 
         default_items = self.get_display_activities(defaults)
-        # default_items = '", "'.join(d["label"] for d in defaults)
-        # default_items = f'"{default_items}"'
 
         if self.use_select_dialog:
             selections = self.select_dialog(activities_str, status, prompt, default_items)
-
-            echo(selections)
-
+            # echo(selections)
             if self.no_selections(selections):
                 return False
 
