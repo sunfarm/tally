@@ -27,7 +27,7 @@ activities = [
     {
         "label": "Superman",
         "goal": 5,
-        "value": 15,
+        "value": 30,
         "unit": "seconds",
     },
     {
@@ -36,12 +36,12 @@ activities = [
         "value": 10,
         "unit": "repetitions",
     },
-    {
-        "label": "Crunches",
-        "goal": 5,
-        "value": 10,
-        "unit": "repetitions",
-    },
+    # {
+    #     "label": "Crunches",
+    #     "goal": 5,
+    #     "value": 10,
+    #     "unit": "repetitions",
+    # },
     {
         "label": "Pullups",
         "goal": 10,
@@ -82,7 +82,7 @@ class Tally(object):
     interval: int = 15
     use_select_dialog: bool = True
     database_name: str = "tally.db"
-    group_size: int = 3
+    group_size: int = 1
     storage: Storage = field(init=False)
 
     def __post_init__(self):
