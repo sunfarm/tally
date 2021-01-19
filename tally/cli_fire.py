@@ -141,7 +141,8 @@ class Tally(object):
             default_activities = activities[:self.group_size]
             for i, activity in enumerate(activities):
                 activity["count"] = self.storage.get_count(activity["label"])
-                activity["completeness"] = activity["count"] / activity["goal"]
+                activity["completeness"] = (activity["count"] + 1) / activity["goal"]
+                # echo(activity)
                 if activity["completeness"] < default_activity["completeness"]:
                     default_activity = activity
                     default_activities = [activities[j % len(activities)] for j in range(i, i + self.group_size)]
