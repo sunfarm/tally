@@ -4,11 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
-click = "*"
+fire = "*"
 sqlalchemy = "*"
 questionary = "*"
-fire = "*"
 
 [dev-packages]
 black = "*"
