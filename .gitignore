@@ -2,6 +2,8 @@
 # Project specific
 
 tally.db
+.idea/
+
 
 # The rest of this file is GENERATED
 
