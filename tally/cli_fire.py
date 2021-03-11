@@ -11,10 +11,18 @@ from tally.storage import Storage
 # TODO: change sleep to something like sleep_until
 # see https://stackoverflow.com/questions/2031111/in-python-how-can-i-put-a-thread-to-sleep-until-a-specific-time
 
+# TODO: add an optional snooze button
+
 activities = [
     {
-        "label": "Body Squats",
-        "goal": 10,
+        "label": "Pushups",
+        "goal": 5,
+        "value": 10,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Hanging row",
+        "goal": 5,
         "value": 10,
         "unit": "repetitions",
     },
@@ -31,22 +39,28 @@ activities = [
         "unit": "seconds",
     },
     {
-        "label": "Pushups",
-        "goal": 10,
+        "label": "Shoulder press",
+        "goal": 5,
+        "value": 15,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Pullups",
+        "goal": 5,
+        "value": 5,
+        "unit": "repetitions",
+    },
+    {
+        "label": "Body Squats",
+        "goal": 5,
         "value": 10,
         "unit": "repetitions",
     },
-    # {
-    #     "label": "Crunches",
-    #     "goal": 5,
-    #     "value": 10,
-    #     "unit": "repetitions",
-    # },
     {
-        "label": "Pullups",
-        "goal": 10,
-        "value": 5,
-        "unit": "repetitions",
+        "label": "Crow Pose",
+        "goal": 5,
+        "value": 30,
+        "unit": "seconds",
     },
 ]
 
@@ -146,6 +160,10 @@ class Tally(object):
                 if activity["completeness"] < default_activity["completeness"]:
                     default_activity = activity
                     default_activities = [activities[j % len(activities)] for j in range(i, i + self.group_size)]
+
+                # TODO: add flexible override hook
+                if len(default_activities) == 1 and default_activity["label"] in ["Pushups", "Plank"]:
+                    default_activities.append(activities[i + 1])
                 # status += (
                 #     f'{activity["label"]}: {activity["count"]}/{activity["goal"]}\n'
                 # )
